@@ -19,11 +19,11 @@ load 'structure.rb'
 ######################################################
 
 def docVersionSdk
-  "<p><b>MoSync SDK 3.3</b></p>"
+  "<p><b>MoSync SDK 3.2.1</b></p>"
 end
 
 def docVersionReload
-  "<p><b>MoSync Reload 1.1</b></p>"
+  "<p><b>MoSync Reload 1.0</b></p>"
 end
 
 ######################################################
@@ -71,6 +71,14 @@ end
 
 def pathPageSdkMenu
   pathTemplates + "page-sdk-menu.html"
+end
+
+def pathPageSdkApiReferenceCpp
+  pathTemplates + "page-sdk-api-reference-cpp.html"
+end
+
+def pathPageSdkApiReferenceJs
+  pathTemplates + "page-sdk-api-reference-js.html"
 end
 
 def pathPageReloadHome
@@ -128,9 +136,11 @@ MENU_START_HOME="TEMPLATE_THEME_MENU_START_HOME"
 MENU_START_SDK="TEMPLATE_THEME_MENU_START_SDK"
 MENU_START_RELOAD="TEMPLATE_THEME_MENU_START_RELOAD"
 MENU_START_SEARCH="TEMPLATE_THEME_MENU_START_SEARCH"
+MENU_CPP_API_REFERENCE="TEMPLATE_THEME_MENU_CPP_API_REFERENCE"
 MENU_CPP_GUIDES="TEMPLATE_THEME_MENU_CPP_GUIDES"
 MENU_CPP_TUTORIALS="TEMPLATE_THEME_MENU_CPP_TUTORIALS"
 MENU_CPP_EXAMPLES="TEMPLATE_THEME_MENU_CPP_EXAMPLES"
+MENU_JS_API_REFERENCE="TEMPLATE_THEME_MENU_JS_API_REFERENCE"
 MENU_JS_GUIDES="TEMPLATE_THEME_MENU_JS_GUIDES"
 MENU_JS_TUTORIALS="TEMPLATE_THEME_MENU_JS_TUTORIALS"
 MENU_JS_EXAMPLES="TEMPLATE_THEME_MENU_JS_EXAMPLES"
@@ -148,9 +158,11 @@ MENU_START_HOME,
 #MENU_START_SDK,
 #MENU_START_RELOAD,
 MENU_START_SEARCH,
+MENU_CPP_API_REFERENCE,
 MENU_CPP_GUIDES,
 MENU_CPP_TUTORIALS,
 MENU_CPP_EXAMPLES,
+MENU_JS_API_REFERENCE,
 MENU_JS_GUIDES,
 MENU_JS_TUTORIALS,
 MENU_JS_EXAMPLES,
@@ -305,11 +317,55 @@ end
 #               Build MoSync SDK Pages               #
 #----------------------------------------------------#
 
+# Build the SDK home page.
+def webSiteBuildSdkHomePage
+  webSiteBuildPage(
+    :outputFile => pathWebSiteSdk() + "index.html",
+    :pageFile => pathPageSdkHome(),
+    :menuFile => pathPageSdkMenu(),
+    :templateFile => pathPageTemplate(),
+    :swatch => swatchSdk(),
+    :pageHeading => fileGetPageTitle(pathPageSdkHome()),
+    :pageHeaderTags => fileGetHeaderTags(pathPageSdkHome()),
+    :selectedMenuItem => MENU_START_SDK,
+    :docVersion => docVersionSdk()
+    )
+end
+
 # Builds the feature-platform-support page.
 def webSiteBuildSdkSpecialPages
   puts "Building special pages"
-  
   webSiteBuildSdkFeaturePlatformSupportPage
+  webSiteBuildSdkApiReferenceCpp
+  webSiteBuildSdkApiReferenceJs
+end
+
+def webSiteBuildSdkApiReferenceCpp
+  webSiteBuildPage(
+    :outputFile => pathWebSiteSdk() + "api-reference-cpp.html",
+    :pageFile => pathPageSdkApiReferenceCpp(),
+    :menuFile => pathPageSdkMenu(),
+    :templateFile => pathPageTemplate(),
+    :swatch => swatchSdk(),
+    :pageHeading => fileGetPageTitle(pathPageSdkApiReferenceCpp()),
+    :pageHeaderTags => fileGetHeaderTags(pathPageSdkApiReferenceCpp()),
+    :selectedMenuItem => MENU_CPP_API_REFERENCE,
+    :docVersion => docVersionSdk()
+    )
+end
+
+def webSiteBuildSdkApiReferenceJs
+  webSiteBuildPage(
+    :outputFile => pathWebSiteSdk() + "api-reference-js.html",
+    :pageFile => pathPageSdkApiReferenceJs(),
+    :menuFile => pathPageSdkMenu(),
+    :templateFile => pathPageTemplate(),
+    :swatch => swatchSdk(),
+    :pageHeading => fileGetPageTitle(pathPageSdkApiReferenceJs()),
+    :pageHeaderTags => fileGetHeaderTags(pathPageSdkApiReferenceJs()),
+    :selectedMenuItem => MENU_JS_API_REFERENCE,
+    :docVersion => docVersionSdk()
+    )
 end
 
 # Builds the feature-platform-support page.
@@ -369,21 +425,6 @@ def webSiteBuildSdkFeaturePlatformSupportPage
   
   # Save the page.
   fileSaveContent(htmlFile, html)
-end
-
-# Build the SDK home page.
-def webSiteBuildSdkHomePage
-  webSiteBuildPage(
-    :outputFile => pathWebSiteSdk() + "index.html",
-    :pageFile => pathPageSdkHome(),
-    :menuFile => pathPageSdkMenu(),
-    :templateFile => pathPageTemplate(),
-    :swatch => swatchSdk(),
-    :pageHeading => fileGetPageTitle(pathPageSdkHome()),
-    :pageHeaderTags => fileGetHeaderTags(pathPageSdkHome()),
-    :selectedMenuItem => MENU_START_SDK,
-    :docVersion => docVersionSdk()
-    )
 end
 
 # Build all SDK documentation pages.
@@ -726,7 +767,6 @@ def webSiteBuildPageFromTemplateData(params)
   # Insert content and title.
   html = templateData.gsub("TEMPLATE_HEADER_TAGS", pageHeaderTags)
   html = html.gsub("TEMPLATE_PAGE_HEADING", pageHeading)
-  html = html.gsub("TEMPLATE_DOC_VERSION", docVersion)
   html = html.gsub("TEMPLATE_PAGE_CONTENT", pageData)
   
   # Insert menu at two places with different insets.
@@ -734,6 +774,7 @@ def webSiteBuildPageFromTemplateData(params)
   html = html.gsub("TEMPLATE_MENU_INSET", "true")
   html = html.gsub("TEMPLATE_PANEL_MENU", menuData)
   html = html.gsub("TEMPLATE_MENU_INSET", "false")
+  html = html.gsub("TEMPLATE_DOC_VERSION", docVersion)
   
   # Set theme swatch letters.
   html = html.gsub("TEMPLATE_THEME_PAGE_MAIN", webSiteDataTheme(swatch))
@@ -1365,12 +1406,17 @@ end
 def generateRedirectSQL
   deleteTemplate = "DELETE FROM mosyncweb_path_redirect where source = 'ORIGINAL_PATH';"
   insertTemplate = "INSERT INTO mosyncweb_path_redirect (rid,source,redirect,query,fragment,type,last_used,language)
-VALUES (NULL,'ORIGINAL_PATH','TARGET_PATH',NULL,NULL,'301',NOW(),'');"
+VALUES (NULL,'ORIGINAL_PATH','TARGET_PATH',NULL,NULL,'301',unix_timestamp(now()),'');"
 #TODO: Change NOW() to: unix_timestamp(now())
   sql = ""
+  counter = 0
   targetFileNames = docAllPagesNotIgnore().collect do |page|
     originalPath = pageOriginalFile(page)
     targetPath = pageTargetFile(page)
+	if (originalPath != "") then
+      counter = counter + 1
+	  #puts counter.to_s + " " + originalPath
+	end
     if (targetPath == HOME_PATH) then
       targetPath = "docs/index.html"
     else
@@ -1380,10 +1426,13 @@ VALUES (NULL,'ORIGINAL_PATH','TARGET_PATH',NULL,NULL,'301',NOW(),'');"
     insertStatement = insertTemplate.
         gsub("ORIGINAL_PATH", originalPath).
             gsub("TARGET_PATH", targetPath)
-    sql += deleteStatement + "\n" + insertStatement + "\n"
+	if (originalPath != "") then
+      sql += deleteStatement + "\n" + insertStatement + "\n"
+	end
   end
   
   puts sql
+  #puts counter.to_s
 end
 
 # Generate a list of URLs that can be used with Google Search
